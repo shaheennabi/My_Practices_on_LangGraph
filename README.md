@@ -1,1 +1,1 @@
-# My_Practices_on_LangGraph
+### In this folder I have some simple workflows like bmi_workflow, simple_llm_workflow_langgraph (for basic of langgraph)
