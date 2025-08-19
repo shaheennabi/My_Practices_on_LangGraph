@@ -1,38 +1,38 @@
-from langgraph.graph import  StateGraph, START, END
+# backend.py
 from typing import TypedDict, Annotated
-from langchain_core.messages import  BaseMessage
+from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import BaseMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory  import InMemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
 
-
+# load .env for OpenAI key
 load_dotenv()
 
-llm = ChatOpenAI()
+# Initialize model
+llm = ChatOpenAI(model="gpt-4o-mini")  # you can change model if needed
 
+# Define state schema
 class ChatState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
-
+# Node function
 def chat_node(state: ChatState):
-    messages = state['messages']
-    response = llm.invoke(messages)
-    return  {"messages": [response]}
+    messages = state["messages"]
+    response = llm.invoke(messages)   # LLM sees full history
+    return {"messages": [response]}   # append new AI message to state
 
-## checkpointer
+# Create checkpointer
 checkpointer = InMemorySaver()
 
-## creating instance of StateGraph
+# Build graph
 graph = StateGraph(ChatState)
 
-## adding the node
+# Add nodes and edges
 graph.add_node("chat_node", chat_node)
-
-## adding edges
 graph.add_edge(START, "chat_node")
 graph.add_edge("chat_node", END)
 
-
-## compiling
+# Compile into runnable chatbot
 chatbot = graph.compile(checkpointer=checkpointer)
